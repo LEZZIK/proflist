@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Профлист: расчёт и цены</title>
+<meta name="description" content="Профлист С8, С10, С20, С21, НС35, Н60. Калькулятор количества листов и примерная стоимость.">
+<style>
+:root{--bg:#eceff0;--ink:#1f262b;--muted:#5a666e;--line:#c5cbd0;--card:#fff;--accent:#1e5a46;--accent-ink:#fff}
+@media (prefers-color-scheme:dark){:root{--bg:#161b1e;--ink:#e8ecee;--muted:#9aa7af;--line:#2f383d;--card:#1f262a;--accent:#4fa388;--accent-ink:#0f1a16}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 "Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;padding:0 0 40px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 18px}
+header{background:repeating-linear-gradient(90deg,var(--accent) 0 14px,color-mix(in srgb,var(--accent) 80%,#000) 14px 20px);color:var(--accent-ink);padding:70px 0 44px}
+header h1{margin:0 0 8px;font-size:clamp(28px,5vw,44px);line-height:1.1;font-weight:800;letter-spacing:-.5px}
+header p{margin:0;max-width:560px;font-size:18px}
+h2{font-size:24px;margin:44px 0 14px}
+.calc{display:grid;grid-template-columns:1fr 1fr;gap:18px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;margin-top:-22px;position:relative}
+label{display:block;font-size:14px;color:var(--muted);margin-bottom:4px}
+select,input{width:100%;font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);margin-bottom:12px}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.res{background:var(--bg);border-radius:8px;padding:16px;display:flex;flex-direction:column;justify-content:space-between}
+.res dl{margin:0;display:grid;grid-template-columns:1fr auto;gap:6px 12px}
+.res dt{color:var(--muted)}
+.res dd{margin:0;text-align:right;font-weight:600}
+.total{font-size:30px;font-weight:800;margin:14px 0 4px}
+.note{font-size:13px;color:var(--muted);margin:0}
+button,.btn{display:inline-block;font:inherit;font-weight:600;background:var(--accent);color:var(--accent-ink);border:0;border-radius:6px;padding:11px 18px;cursor:pointer;text-decoration:none;text-align:center}
+.btn.alt{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.table{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:680px}
+th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line)}
+th{font-size:14px;color:var(--muted);font-weight:600}
+tr:last-child td{border-bottom:0}
+.contacts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.contacts a{padding:16px}
+footer{margin-top:40px;color:var(--muted);font-size:13px}
+[hidden]{display:none!important}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tabs button,.mt button{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.tabs [aria-selected=true],.mt [aria-selected=true]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.mt{display:flex;gap:8px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:-22px;position:relative}
+.calcbtn{position:fixed;top:12px;right:12px;z-index:5;background:var(--card)!important;color:var(--ink)!important;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+#dlg{display:none;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:12px;overflow:auto}
+#dlg.open{display:block;position:fixed;inset:0;z-index:10;border-radius:0}
+.dh{display:flex;justify-content:space-between;gap:10px;padding:12px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:2}
+.db{padding:18px}
+#dlg .calc,#dlg .rcard{margin-top:0;grid-template-columns:1fr}
+#dlg table{min-width:0!important}
+#dlg th,#dlg td{padding:8px;font-size:14px}
+@media (max-width:999px){body.lock{overflow:hidden}}
+@media (min-width:1000px){
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 460px;gap:22px;align-items:start}
+  #dlg{display:block;position:sticky;top:12px;margin-top:-22px;max-height:calc(100vh - 24px)}
+  .calcbtn,#closecalc{display:none}
+}
+ul.adv{padding-left:20px;max-width:70ch}ul.adv li{margin:8px 0}
+.lead{max-width:70ch}
+.rcard{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;margin-top:-22px;position:relative;display:grid;grid-template-columns:240px 1fr;gap:18px}
+#cv{width:100%;height:380px;display:block;border-radius:8px;background:var(--bg);touch-action:none;cursor:grab}
+h3{font-size:18px;margin:22px 0 10px}
+.sum{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-top:14px}
+@media (max-width:700px){.calc,.rcard{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <button id="opencalc" type="button" class="calcbtn">Калькулятор профлиста</button>
+  <h1>Профлист от производителя</h1>
+  <p>Качество материала - основа надёжности и красоты вашего участка.</p>
+</div></header>
+
+<main class="wrap layout">
+<div class="lc">
+<nav class="mt" role="tablist" aria-label="Разделы сайта"><button role="tab" aria-selected="true" data-m="1">О компании</button><button role="tab" aria-selected="false" data-m="2">Позиции и цены</button><button role="tab" aria-selected="false" data-m="3">Доставка</button><button role="tab" aria-selected="false" data-m="4">Контакты</button></nav>
+
+  <section id="m1">
+    <h2>О компании</h2>
+    <p class="lead">Поставляем профнастил и плоский лист для кровли, заборов и стен.</p>
+    <h3>Наши преимущества</h3>
+    <ul class="adv">
+      <li>Большой ассортимент в наличии на складе. Редкие позиции профлиста готовы привезти на заказ.</li>
+      <li>Гибкая система ценообразования.</li>
+      <li>Удобный способ подписания документов. Нет бюрократии.</li>
+      <li>Быстрое согласование договорных условий.</li>
+      <li>Отсрочка платежа.</li>
+      <li>Оперативная погрузка.</li>
+      <li>Комплектация заявки на один склад.</li>
+      <li>Услуги доставки по городу и стране.</li>
+      <li>Услуги резки металла всеми режущими инструментами и оборудованием.</li>
+    </ul>
+  </section>
+
+  <section id="m2" hidden>
+  <h2>Что у нас есть</h2>
+  <div class="table"><table>
+    <thead><tr><th>Марка</th><th>Для чего подходит</th><th>Ширина, мм (полезная / общая)</th><th>Оцинкованный, от</th><th>С полимером, от</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table></div>
+  <p class="note" style="margin-top:8px">Цены в рублях за м² и зависят от толщины металла, цвета и наличия.</p>
+
+  </section>
+
+  <section id="m3" hidden>
+    <h2>Доставка</h2>
+    <p class="lead">Доставляем по городу и по стране. Выберите машину под размер и вес заказа.</p>
+    <div class="table"><table style="min-width:520px">
+      <thead><tr><th>Машина</th><th>Длина</th><th>Грузоподъёмность</th><th>Стоимость</th></tr></thead>
+      <tbody>
+        <tr><td><b>Бортовая</b></td><td>до 4 м</td><td>до 1,5 т</td><td>от 3 500 ₽</td></tr>
+        <tr><td><b>Воровайка с краном</b></td><td>до 7 м</td><td>до 5 т</td><td>от 5 000 ₽</td></tr>
+        <tr><td><b>Борт 12 м</b></td><td>до 12 м</td><td>до 20 т</td><td>от 12 000 ₽</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note" style="margin-top:8px">Разгрузка бортовых машин выполняется самостоятельно, без помощи водителя. Помощь водителя возможна за дополнительную плату в индивидуальном порядке.</p>
+  </section>
+
+  <section id="m4" hidden>
+  <h2>Как связаться</h2>
+  <div class="contacts">
+    <a class="btn" href="tel:+79504366610">Позвонить: +7 950 436-66-10</a>
+    <a class="btn alt" href="https://max.ru/" target="_blank" rel="noopener">Написать в MAX</a>
+    <a class="btn alt" href="https://www.avito.ru/brands/i193566692" target="_blank" rel="noopener">Наш профиль на Авито</a>
+  </div>
+
+  </section>
+
+
+  <footer>Укажите в сообщении марку, количество и город доставки.</footer>
+</div>
+  <aside id="dlg" aria-label="Калькулятор профлиста">
+    <div class="dh">
+  <div class="tabs" role="tablist"><button id="t1" role="tab" aria-selected="true" onclick="tab(1)">Забор и стены</button><button id="t2" role="tab" aria-selected="false" onclick="tab(2)">Крыша в 3D</button></div>
+      <button type="button" class="btn alt" id="closecalc">Закрыть</button>
+    </div>
+    <div class="db">
+  <div id="p1">
+  <section class="calc" aria-label="Калькулятор профлиста">
+    <div>
+      <label for="mark">Марка профлиста</label>
+      <select id="mark"></select>
+      <label for="cover">Покрытие</label>
+      <select id="cover">
+        <option value="zn">Оцинкованный</option>
+        <option value="pol">С полимерным покрытием</option>
+      </select>
+      <label for="w">Ширина участка (забор, скат кровли), м</label>
+      <input id="w" type="number" min="0.1" step="0.1" value="10" inputmode="decimal">
+      <label for="l">Длина листа, м</label>
+      <input id="l" type="number" min="0.5" max="12" step="0.1" value="2" inputmode="decimal">
+    </div>
+    <div class="res" aria-live="polite">
+      <dl>
+        <dt>Полезная ширина листа</dt><dd id="uw"></dd>
+        <dt>Листов</dt><dd id="cnt"></dd>
+        <dt>Площадь</dt><dd id="area"></dd>
+        <dt>Цена за м²</dt><dd id="pm"></dd>
+      </dl>
+      <div>
+        <div class="total" id="sum"></div>
+        <p class="note">Расчёт ориентировочный: учитывает нахлёст листов, но не доставку и не доборные элементы.</p>
+        <p style="margin:14px 0 0"><button id="copy" type="button">Скопировать расчёт для заявки</button></p>
+      </div>
+    </div>
+  </section></div>
+
+  <div id="p2" hidden>
+  <section class="rcard" aria-label="Калькулятор крыши">
+    <div>
+      <label for="rt">Форма крыши</label>
+      <select id="rt"><option value="one">Односкатная</option><option value="two" selected>Двухскатная</option><option value="man">Мансардная</option><option value="tent">Шатровая</option><option value="tri">Треугольная</option></select>
+      <label for="rA">Длина здания, м</label><input id="rA" type="number" min="1" max="40" step="0.1" value="8">
+      <label for="rB">Ширина здания, м</label><input id="rB" type="number" min="1" max="40" step="0.1" value="6">
+      <label for="rH">Высота подъёма крыши, м</label><input id="rH" type="number" min="0.3" max="15" step="0.1" value="2.2">
+      <label for="rm">Марка профлиста</label><select id="rm"></select>
+      <label for="rc">Покрытие</label><select id="rc"><option value="zn">Оцинкованный</option><option value="pol" selected>С полимерным покрытием</option></select>
+      <label for="rcol">Цвет кровли</label><select id="rcol"></select>
+      <label for="rac">Цвет доборных элементов</label><select id="rac"></select>
+    </div>
+    <div>
+      <canvas id="cv" aria-label="3D-модель крыши"></canvas>
+      <p class="note" id="cvn">Потяните мышью или пальцем, чтобы повернуть. Колесо мыши меняет масштаб. Видны швы между листами.</p>
+    </div>
+  </section>
+  <h3>Скаты и листы</h3>
+  <div class="table"><table style="min-width:480px"><thead><tr><th>Скат</th><th>Площадь</th><th>Листов × длина</th><th>Сумма</th></tr></thead><tbody id="rs"></tbody></table></div>
+  <h3>Доборные элементы (штуки по 2 м)</h3>
+  <div class="table"><table style="min-width:480px"><thead><tr><th>Элемент</th><th>Рассчитано, шт.</th><th>Добавить, шт.</th><th>Сумма</th></tr></thead><tbody id="ra"></tbody></table></div>
+  <p class="note" style="margin-top:8px">Торцевые планки, коньки (в том числе на рёбрах шатровой и треугольной крыши) и углы (изломы мансарды) считаются по форме крыши. Ендовы и другие элементы добавляйте вручную.</p>
+  <div class="sum"><div class="total" id="rsum"></div><p class="note" id="rnote">Расчёт ориентировочный, без доставки, крепежа и свесов.</p><p style="margin:12px 0 0"><button id="rcopy" type="button">Скопировать расчёт для заявки</button></p></div>
+  </div>
+
+    </div>
+  </aside>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ===== РЕДАКТИРУЙТЕ ЗДЕСЬ: марки, полезная ширина (м), примерные цены ₽/м² =====
+// Цены ниже — примеры, замените на свои.
+var MARKS = {
+  "С8":   {uw:1.15, tw:1.20,  use:"забор, облицовка, небольшие навесы", zn:450, pol:560},
+  "С10":  {uw:1.10, tw:1.13,  use:"забор, стены, небольшая кровля",     zn:480, pol:590},
+  "С20":  {uw:1.10, tw:1.15,  use:"забор, стены, кровля с частой обрешёткой", zn:520, pol:640},
+  "С21":  {uw:1.00, tw:1.051, use:"забор, кровля, стены",               zn:560, pol:680},
+  "НС35": {uw:1.00, tw:1.06,  use:"кровля, прочный забор, ограждения",  zn:640, pol:780},
+  "С44":  {uw:1.00, tw:1.047, use:"кровля, прочный забор, стены",       zn:600, pol:730},
+  "Н57":  {uw:0.75, tw:0.801, use:"кровля с большим шагом обрешётки, перекрытия", zn:720, pol:880},
+  "Н60":  {uw:0.845,tw:0.902, use:"кровля с большим шагом, перекрытия, ангары", zn:760, pol:920},
+  "Н75":  {uw:0.75, tw:0.80,  use:"кровля больших пролётов, перекрытия, ангары", zn:820, pol:990},
+  "Плоский лист": {uw:1.25, tw:1.25, use:"обшивка, отливы, изготовление доборных элементов", zn:380, pol:480}
+};
+// =============================================================================
+var $ = function(id){return document.getElementById(id)};
+var fmt = function(n){return Math.round(n).toLocaleString("ru-RU")};
+var mark=$("mark"), rows=$("rows");
+Object.keys(MARKS).forEach(function(k){
+  mark.add(new Option(k,k));
+  var m=MARKS[k], tr=document.createElement("tr");
+  tr.innerHTML="<td><b>"+k+"</b></td><td>"+m.use+"</td><td>"+Math.round(m.uw*1000)+" / "+Math.round(m.tw*1000)+"</td><td>"+m.zn+" ₽</td><td>"+m.pol+" ₽</td>";
+  rows.appendChild(tr);
+});
+mark.value="С8";
+var text="";
+function calc(){
+  var m=MARKS[mark.value], cover=$("cover").value;
+  var w=parseFloat($("w").value)||0, l=parseFloat($("l").value)||0;
+  var price=m[cover];
+  var cnt=w>0?Math.ceil(w/m.uw):0;
+  var area=cnt*m.uw*l;
+  var sum=area*price;
+  $("uw").textContent=Math.round(m.uw*1000)+" мм (общая "+Math.round(m.tw*1000)+")";
+  $("cnt").textContent=cnt+" шт.";
+  $("area").textContent=area.toFixed(1).replace(".",",")+" м²";
+  $("pm").textContent=price+" ₽";
+  $("sum").textContent="≈ "+fmt(sum)+" ₽";
+  text="Здравствуйте! Хочу рассчитать профлист "+mark.value+
+    (cover==="zn"?" оцинкованный":" с полимерным покрытием")+
+    ": "+cnt+" шт. по "+l+" м (ширина участка "+w+" м), примерно "+fmt(sum)+" ₽. Город доставки: ";
+}
+["mark","cover","w","l"].forEach(function(id){$(id).addEventListener("input",calc)});
+$("copy").addEventListener("click",function(){
+  var b=this;
+  function done(ok){b.textContent=ok?"Скопировано. Вставьте в сообщение":"Выделите и скопируйте вручную: "+text;}
+  try{navigator.clipboard.writeText(text).then(function(){done(true)},function(){done(false)})}catch(e){done(false)}
+});
+calc();
+
+// ===== Крыша 3D =====
+// название, цена за 1 шт. (2 м) в ₽ — примерные, замените на свои
+var ACC={end:["Торцевая планка",250],cor:["Угол",280],rid:["Конёк",330],val:["Ендова",380]};
+var COL={"Оцинковка":"#b5bcc2","Зелёный RAL 6005":"#2f6b4f","Коричневый RAL 8017":"#4a2e25","Красный RAL 3005":"#7a2430","Серый RAL 7024":"#4b4f57","Синий RAL 5005":"#1f4e8c"};
+var RIB={"С8":6,"С10":5,"С20":4,"С21":4,"НС35":3,"С44":3,"Н57":2,"Н60":2,"Н75":2,"Плоский лист":0};
+var V=function(x,y,z){return[x,y,z]},sb=function(a,b){return[a[0]-b[0],a[1]-b[1],a[2]-b[2]]},
+cr=function(a,b){return[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]]},
+dt=function(a,b){return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]},ln=function(a){return Math.sqrt(dt(a,a))},
+nm=function(a){var l=ln(a)||1;return[a[0]/l,a[1]/l,a[2]/l]};
+Object.keys(MARKS).forEach(function(k){$("rm").add(new Option(k,k))});
+$("rm").value="С8";
+$("rac").add(new Option("Как у кровли","same"));
+Object.keys(COL).forEach(function(k){$("rcol").add(new Option(k,k));$("rac").add(new Option(k,k))});
+$("rcol").value="Зелёный RAL 6005";
+Object.keys(ACC).forEach(function(k){var tr=document.createElement("tr");
+  tr.innerHTML='<td><label style="display:flex;gap:8px;margin:0;color:inherit"><input type="checkbox" id="on_'+k+'" checked style="width:auto;margin:0">'+ACC[k][0]+'</label></td><td id="au_'+k+'"></td><td><input id="ex_'+k+'" type="number" min="0" value="0" style="width:84px;margin:0"></td><td id="ac_'+k+'"></td>';
+  $("ra").appendChild(tr)});
+
+function geo(type,A,B,H){
+  var x=A/2,z=B/2,W=2.6,f=[],w=[],e={end:[],cor:[],rid:[]};
+  var prof={one:[[-z,H],[z,0]],two:[[-z,0],[0,H],[z,0]],man:[[-z,0],[-B/3,.65*H],[0,H],[B/3,.65*H],[z,0]]}[type];
+  if(prof){
+    for(var i=0;i<prof.length-1;i++){var a=prof[i],b=prof[i+1];
+      f.push({p:[V(-x,a[1],a[0]),V(x,a[1],a[0]),V(x,b[1],b[0]),V(-x,b[1],b[0])],r:1});
+      e.end.push([V(-x,a[1],a[0]),V(-x,b[1],b[0])],[V(x,a[1],a[0]),V(x,b[1],b[0])])}
+    prof.forEach(function(q,i){var l=[V(-x,q[1],q[0]),V(x,q[1],q[0])];
+      if(type=="one"){if(i==0)e.rid.push(l)}
+      else if(i>0&&i<prof.length-1)(q[1]==H?e.rid:e.cor).push(l)});
+    [-x,x].forEach(function(X){var p=[V(X,-W,-z)];prof.forEach(function(q){p.push(V(X,q[1],q[0]))});p.push(V(X,-W,z));w.push(p)});
+    [prof[0],prof[prof.length-1]].forEach(function(q){w.push([V(-x,q[1],q[0]),V(x,q[1],q[0]),V(x,-W,q[0]),V(-x,-W,q[0])])});
+  }else{
+    var base;
+    if(type=="tri"){var p0=V(-x,0,-z),p1=V(x,0,-z),p2=V(0,0,z),C=V(0,H,-z/3);
+      f=[{p:[p0,p1,C]},{p:[p1,p2,C]},{p:[p2,p0,C]}];e.rid=[[p0,C],[p1,C],[p2,C]];base=[p0,p1,p2]}
+    else{var a=V(-x,0,-z),b=V(x,0,-z),c=V(x,0,z),d=V(-x,0,z),r=Math.abs(A-B)/2,P,Q;
+      if(A>=B){P=V(-r,H,0);Q=V(r,H,0);f=[{p:[a,b,Q,P]},{p:[c,d,P,Q]},{p:[d,a,P]},{p:[b,c,Q]}];e.rid=[[P,Q],[a,P],[d,P],[b,Q],[c,Q]]}
+      else{P=V(0,H,-r);Q=V(0,H,r);f=[{p:[a,b,P]},{p:[c,d,Q]},{p:[b,c,Q,P]},{p:[d,a,P,Q]}];e.rid=[[P,Q],[a,P],[b,P],[c,Q],[d,Q]]}
+      base=[a,b,c,d]}
+    base.forEach(function(p,i){var q=base[(i+1)%base.length];w.push([p,q,V(q[0],-W,q[2]),V(p[0],-W,p[2])])});
+  }
+  return{f:f,w:w,e:e};
+}
+function info(f){var p=f.p,a=0,n=nm(cr(sb(p[1],p[0]),sb(p[2],p[0])));
+  for(var i=1;i<p.length-1;i++)a+=ln(cr(sb(p[i],p[0]),sb(p[i+1],p[0])))/2;
+  var d=nm([n[0]*n[1],n[1]*n[1]-1,n[2]*n[1]]),mn=1e9,mx=-1e9;
+  p.forEach(function(q){var t=dt(q,d);mn=Math.min(mn,t);mx=Math.max(mx,t)});
+  return{a:a,L:mx-mn,e:nm(cr(d,n))};}
+
+var R=null,th=.8,ph=1,dist=14,tg=[0,1,0],lastKey="";
+function initRoof(){
+  var cv=$("cv");
+  if(!window.THREE){$("cvn").textContent="3D-модель не загрузилась (нужен интернет). Расчёт ниже работает.";cv.style.display="none";return}
+  var r=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
+  r.setPixelRatio(Math.min(devicePixelRatio||1,2));
+  var sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(40,1,.1,200),grp=new THREE.Group();
+  sc.add(grp,new THREE.AmbientLight(0xffffff,.75));
+  var dl=new THREE.DirectionalLight(0xffffff,.8);dl.position.set(6,12,8);sc.add(dl);
+  var gr=new THREE.GridHelper(40,40,0x8a949a,0xb9c0c5);gr.position.y=-2.6;sc.add(gr);
+  R={r:r,sc:sc,cam:cam,grp:grp};
+  var dr=null;
+  cv.addEventListener("pointerdown",function(e){dr=[e.clientX,e.clientY];cv.setPointerCapture(e.pointerId)});
+  cv.addEventListener("pointermove",function(e){if(!dr)return;th-=(e.clientX-dr[0])*.01;ph=Math.min(1.5,Math.max(.15,ph-(e.clientY-dr[1])*.01));dr=[e.clientX,e.clientY];view()});
+  ["pointerup","pointercancel"].forEach(function(n){cv.addEventListener(n,function(){dr=null})});
+  cv.addEventListener("wheel",function(e){e.preventDefault();dist=Math.min(120,Math.max(3,dist*(1+e.deltaY*.001)));view()},{passive:false});
+  addEventListener("resize",size);size();
+}
+function size(){if(!R)return;var cv=$("cv"),w=cv.clientWidth||600;R.r.setSize(w,380,false);R.cam.aspect=w/380;R.cam.updateProjectionMatrix();view()}
+function view(){if(!R)return;var c=R.cam;
+  c.position.set(tg[0]+dist*Math.sin(ph)*Math.sin(th),tg[1]+dist*Math.cos(ph),tg[2]+dist*Math.sin(ph)*Math.cos(th));
+  c.lookAt(tg[0],tg[1],tg[2]);R.r.render(R.sc,c)}
+function tex(col,rb){var c=document.createElement("canvas");c.width=128;c.height=4;var x=c.getContext("2d");
+  x.fillStyle=col;x.fillRect(0,0,128,4);var w=128/rb;
+  for(var i=0;i<rb;i++){var g=x.createLinearGradient(i*w,0,(i+1)*w,0);
+    g.addColorStop(0,"rgba(0,0,0,.3)");g.addColorStop(.35,"rgba(255,255,255,.18)");g.addColorStop(.7,"rgba(0,0,0,0)");g.addColorStop(1,"rgba(0,0,0,.3)");
+    x.fillStyle=g;x.fillRect(i*w,0,w,4)}
+  x.fillStyle="rgba(0,0,0,.6)";x.fillRect(0,0,2,4);
+  var t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;return t}
+function mesh(p,mat,uv){var g=new THREE.BufferGeometry(),pos=[],ix=[];
+  p.forEach(function(q){pos.push(q[0],q[1],q[2])});
+  for(var i=1;i<p.length-1;i++)ix.push(0,i,i+1);
+  g.setAttribute("position",new THREE.Float32BufferAttribute(pos,3));
+  if(uv)g.setAttribute("uv",new THREE.Float32BufferAttribute(uv,2));
+  g.setIndex(ix);g.computeVertexNormals();return new THREE.Mesh(g,mat)}
+
+var rtext="";
+function upd(){
+  var t=$("rt").value,A=+$("rA").value||1,B=+$("rB").value||1,H=+$("rH").value||.5,mk=$("rm").value,m=MARKS[mk],cvr=$("rc").value,pr=m[cvr];
+  $("rcol").disabled=cvr==="zn";
+  var col=cvr==="zn"?COL["Оцинковка"]:COL[$("rcol").value],ac=$("rac").value==="same"?col:COL[$("rac").value];
+  var g=geo(t,A,B,H),rows="",area=0,sheetSum=0,cnt=0,long_=false,parts=[];
+  g.f.forEach(function(f,i){var s=info(f),L=Math.ceil(s.L*20)/20,n=f.r?Math.ceil(s.a/s.L/m.uw-1e-6):Math.ceil(s.a/s.L/m.uw)+1,sum=n*L*m.uw*pr;
+    area+=s.a;sheetSum+=sum;cnt+=n;if(L>12)long_=true;parts.push(n+"×"+L.toFixed(2)+" м");
+    rows+="<tr><td>Скат "+(i+1)+"</td><td>"+s.a.toFixed(1).replace(".",",")+" м²</td><td>"+n+" × "+L.toFixed(2).replace(".",",")+" м</td><td>"+fmt(sum)+" ₽</td></tr>"});
+  $("rs").innerHTML=rows;
+  var accSum=0,accTxt=[],qtyOf={};
+  Object.keys(ACC).forEach(function(k){
+    var len=0;(g.e[k]||[]).forEach(function(s){len+=ln(sb(s[0],s[1]))});
+    var au=Math.ceil(len/2-1e-6),on=$("on_"+k).checked,q=on?au+(+$("ex_"+k).value||0):0,sum=q*ACC[k][1];
+    qtyOf[k]=on;$("au_"+k).textContent=au+" шт.";$("ac_"+k).textContent=q+" шт. · "+fmt(sum)+" ₽";
+    accSum+=sum;if(q)accTxt.push(ACC[k][0].toLowerCase()+" "+q+" шт.")});
+  $("rsum").textContent="≈ "+fmt(sheetSum+accSum)+" ₽";
+  $("rnote").textContent="Кровля "+area.toFixed(1).replace(".",",")+" м², листов "+cnt+" ("+fmt(sheetSum)+" ₽), доборные "+fmt(accSum)+" ₽. Расчёт ориентировочный, без доставки, крепежа и свесов."+(long_?" Есть листы длиннее 12 м: потребуется стык.":"");
+  rtext="Здравствуйте! Хочу рассчитать кровлю: профлист "+mk+(cvr==="zn"?" оцинкованный":", "+$("rcol").value)+", здание "+A+"×"+B+" м, высота подъёма "+H+" м, "+$("rt").selectedOptions[0].text.toLowerCase()+". Листы: "+parts.join(", ")+(accTxt.length?". Доборные (по 2 м): "+accTxt.join(", "):"")+". Примерно "+fmt(sheetSum+accSum)+" ₽. Город доставки: ";
+  if(!R)return;
+  R.grp.children.slice().forEach(function(o){R.grp.remove(o);if(o.geometry)o.geometry.dispose()});
+  var mat=new THREE.MeshStandardMaterial({map:tex(col,RIB[mk]),side:THREE.DoubleSide,roughness:.55,metalness:.3});
+  g.f.forEach(function(f){var s=info(f),mn=1e9;f.p.forEach(function(q){mn=Math.min(mn,dt(q,s.e))});
+    var uv=[];f.p.forEach(function(q){uv.push((dt(q,s.e)-mn)/m.uw,0)});R.grp.add(mesh(f.p,mat,uv))});
+  var wm=new THREE.MeshStandardMaterial({color:0xe3d9c8,side:THREE.DoubleSide,roughness:1});
+  g.w.forEach(function(p){R.grp.add(mesh(p,wm))});
+  var rd=Math.max(A,B)*.006+.03,am=new THREE.MeshStandardMaterial({color:ac,roughness:.5,metalness:.4});
+  ["end","cor","rid"].forEach(function(k){if(!qtyOf[k])return;g.e[k].forEach(function(s){
+    var d=sb(s[1],s[0]),l=ln(d);if(l<1e-3)return;
+    var cy=new THREE.Mesh(new THREE.CylinderGeometry(rd,rd,l,8),am);
+    cy.position.set((s[0][0]+s[1][0])/2,(s[0][1]+s[1][1])/2,(s[0][2]+s[1][2])/2);
+    cy.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),new THREE.Vector3(d[0],d[1],d[2]).normalize());R.grp.add(cy)})});
+  var key=[t,A,B,H].join();tg=[0,H*.3,0];
+  if(key!==lastKey){dist=Math.max(A,B)*1.5+H*1.5+3;lastKey=key}
+  view();
+}
+["rt","rA","rB","rH","rm","rc","rcol","rac"].forEach(function(id){$(id).addEventListener("input",upd)});
+Object.keys(ACC).forEach(function(k){$("on_"+k).addEventListener("input",upd);$("ex_"+k).addEventListener("input",upd)});
+$("rcopy").addEventListener("click",function(){var b=this;
+  function done(ok){b.textContent=ok?"Скопировано. Вставьте в сообщение":"Выделите и скопируйте вручную: "+rtext}
+  try{navigator.clipboard.writeText(rtext).then(function(){done(true)},function(){done(false)})}catch(e){done(false)}});
+var inited=false;
+function tab(i){$("p1").hidden=i!==1;$("p2").hidden=i!==2;
+  $("t1").setAttribute("aria-selected",i===1);$("t2").setAttribute("aria-selected",i===2);
+  if(i===2){if(!inited){inited=true;initRoof()}size();upd()}}
+upd();
+document.querySelectorAll(".mt button").forEach(function(b){b.addEventListener("click",function(){
+  document.querySelectorAll(".mt button").forEach(function(x){x.setAttribute("aria-selected",x===b)});
+  for(var i=1;i<=4;i++)$("m"+i).hidden=String(i)!==b.dataset.m})});
+$("opencalc").addEventListener("click",function(){$("dlg").classList.add("open");document.body.classList.add("lock");if(!$("p2").hidden){size();upd()}});
+$("closecalc").addEventListener("click",function(){$("dlg").classList.remove("open");document.body.classList.remove("lock")});
+</script>
+</body>
+</html>
